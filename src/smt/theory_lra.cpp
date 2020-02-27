@@ -1140,7 +1140,6 @@ public:
 
     void apply_sort_cnstr(enode* n, sort*) {
         TRACE("arith", tout << "sort constraint: " << mk_pp(n->get_owner(), m) << "\n";);
-#if 0
         if (!th.is_attached_to_var(n)) {
             theory_var v = mk_var(n->get_owner(), false);
             lpvar vj = register_theory_var_in_lar_solver(v);
@@ -1153,7 +1152,6 @@ public:
                 add_def_constraint(lu_constraints.second);
             }
         }
-#endif
     }
 
     void push_scope_eh() {
