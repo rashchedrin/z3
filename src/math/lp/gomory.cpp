@@ -138,13 +138,11 @@ class create_cut {
             if (a.is_pos()) { // we have av >= k
                 if (!m_k.is_int())
                     m_k = ceil(m_k);
-                // switch size
-                m_t.add_monomial(- mpq(1), v);
-                m_k.neg();
+                m_t.add_monomial(mpq(1), v);
             } else {
                 if (!m_k.is_int())
-                    m_k = floor(m_k);
-                m_t.add_monomial(mpq(1), v);
+                    m_k = ceil(m_k);
+                m_t.add_monomial(-mpq(1), v);
             }
         } else {
             m_lcm_den = lcm(m_lcm_den, denominator(m_k));
@@ -158,10 +156,8 @@ class create_cut {
                 }
                 m_k *= m_lcm_den;
             }
-            // negate everything to return -pol <= -m_k
             for (const auto & pi: pol)
-                m_t.add_monomial(-pi.first, pi.second);
-            m_k.neg();
+                m_t.add_monomial(pi.first, pi.second);
         }
         TRACE("gomory_cut_detail", tout << "k = " << m_k << std::endl;);
         lp_assert(m_k.is_int());
