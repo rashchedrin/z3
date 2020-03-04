@@ -121,7 +121,6 @@ class create_cut {
     lia_move report_conflict_from_gomory_cut() {
         lp_assert(m_k.is_pos());
         // conflict 0 >= k where k is positive
-        m_k.neg(); // returning 0 <= -k
         return lia_move::conflict;
     }
 
