@@ -43,7 +43,8 @@ class create_cut {
     struct found_big {};
 
     const impq & get_value(unsigned j) const { return lia.get_value(j); }
-    bool is_real(unsigned j) const { return lia.is_real(j); }
+    bool is_real(unsigned j) const { return lia.is_real(j) && (! (lia.is_fixed(j) &&
+                                                                  lia.lra.column_lower_bound(j).is_int())); }
     bool at_lower(unsigned j) const { return lia.at_lower(j); }
     bool at_upper(unsigned j) const { return lia.at_upper(j); }
     const impq & lower_bound(unsigned j) const { return lia.lower_bound(j); }
@@ -52,6 +53,8 @@ class create_cut {
     constraint_index column_upper_bound_constraint(unsigned j) const { return lia.column_upper_bound_constraint(j); }
     bool column_is_fixed(unsigned j) const { return lia.lra.column_is_fixed(j); }
 
+   
+    
     void int_case_in_gomory_cut(unsigned j) {
         lp_assert(lia.column_is_int(j) && m_fj.is_pos());
         TRACE("gomory_cut_detail", 
@@ -61,16 +64,13 @@ class create_cut {
               );
         mpq new_a;
         if (at_lower(j)) {
-            new_a = m_fj <= m_one_minus_f ? m_fj / m_one_minus_f : ((1 - m_fj) / m_f);
-            lp_assert(new_a.is_pos());
+            new_a = m_fj <= m_one_minus_f ? m_fj / m_one_minus_f : ((m_fj - 1) / m_f);
             m_k.addmul(new_a, lower_bound(j).x);
             m_ex->push_justification(column_lower_bound_constraint(j));            
         }
         else {
             lp_assert(at_upper(j));
-            // the upper terms are inverted: therefore we have the minus
-            new_a = - (m_fj <= m_f ? m_fj / m_f  : ((1 - m_fj) / m_one_minus_f));
-            lp_assert(new_a.is_neg());
+            new_a = - ( m_fj <=m_f ?  m_fj / m_f  : (m_fj - 1) / m_one_minus_f);
             m_k.addmul(new_a, upper_bound(j).x);
             m_ex->push_justification(column_upper_bound_constraint(j));
         }
@@ -84,7 +84,7 @@ class create_cut {
     }
 
     void real_case_in_gomory_cut(const mpq & a, unsigned j) {
-        TRACE("gomory_cut_detail_real", tout << "real\n";);
+        TRACE("gomory_cut_detail_real", tout << "j = " << j << ", a = " << a << ", m_k = " << m_k << "\n";);
         mpq new_a;
         if (at_lower(j)) {
             if (a.is_pos()) {
@@ -108,8 +108,10 @@ class create_cut {
             m_k.addmul(new_a, upper_bound(j).x); //  k += upper_bound(j).x * new_a; 
             m_ex->push_justification(column_upper_bound_constraint(j));
         }
-        TRACE("gomory_cut_detail_real", tout << a << "*v" << j << " k: " << m_k << "\n";);
         m_t.add_monomial(new_a, j);
+        TRACE("gomory_cut_detail_real", tout << "add " << new_a << "*v" << j << ", k: " << m_k << "\n";
+              tout << "m_t =  "; lia.lra.print_term(m_t, tout) << "\nk: " << m_k << "\n";);
+        
 #if SMALL_CUTS
         // if (numerator(new_a).is_big()) throw found_big(); 
         if (numerator(new_a) > m_big_number) throw found_big(); 
@@ -334,8 +336,8 @@ public:
             return report_conflict_from_gomory_cut();
         if (some_int_columns)
             adjust_term_and_k_for_some_ints_case_gomory();
-        lp_assert(lia.current_solution_is_inf_on_cut());
         TRACE("gomory_cut_detail", dump_cut_and_constraints_as_smt_lemma(tout););
+        lp_assert(lia.current_solution_is_inf_on_cut());
         lia.lra.subs_term_columns(m_t);
         TRACE("gomory_cut", print_linear_combination_of_column_indices_only(m_t.coeffs_as_vector(), tout << "gomory cut:"); tout << " <= " << m_k << std::endl;);
         return lia_move::cut;
@@ -441,7 +443,7 @@ lia_move gomory::operator()() {
     const row_strip<mpq>& row = lra.get_row(r);
     SASSERT(lra.row_is_correct(r));
     SASSERT(is_gomory_cut_target(row));
-    lia.m_upper = true;
+    lia.m_upper = false;
     return cut(lia.m_t, lia.m_k, lia.m_ex, j, row);
 }
 
