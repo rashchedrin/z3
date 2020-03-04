@@ -45,7 +45,8 @@ class create_cut {
     const impq & get_value(unsigned j) const { return lia.get_value(j); }
     bool is_int(unsigned j) const { return lia.column_is_int(j) || (lia.is_fixed(j) &&
                                                              lia.lra.column_lower_bound(j).is_int()); }
-    bool is_real(unsigned j) const { return !is_int(j); }
+    bool is_real(unsigned j) const { return lia.is_real(j) && (! (lia.is_fixed(j) &&
+                                                                  lia.lra.column_lower_bound(j).is_int())); }
     bool at_lower(unsigned j) const { return lia.at_lower(j); }
     bool at_upper(unsigned j) const { return lia.at_upper(j); }
     const impq & lower_bound(unsigned j) const { return lia.lower_bound(j); }
@@ -54,6 +55,8 @@ class create_cut {
     constraint_index column_upper_bound_constraint(unsigned j) const { return lia.column_upper_bound_constraint(j); }
     bool column_is_fixed(unsigned j) const { return lia.lra.column_is_fixed(j); }
 
+   
+    
     void int_case_in_gomory_cut(unsigned j) {
         lp_assert(is_int(j) && m_fj.is_pos());
         TRACE("gomory_cut_detail", 
@@ -64,8 +67,6 @@ class create_cut {
         mpq new_a;
         if (at_lower(j)) {
             // here we have the product of new_a*(xj - lb(j)), so new_a*lb(j) is added to m_k
-            // a positive new_a creates a positive delta so it has to work against m_one_minus_f
-            // a negative new_a creates a negative delta so it has to work against m_f
             new_a = m_fj <= m_one_minus_f ? m_fj / m_one_minus_f : ((1 - m_fj) / m_f);
             lp_assert(new_a.is_pos());
             m_k.addmul(new_a, lower_bound(j).x);
@@ -74,8 +75,6 @@ class create_cut {
         else {
             lp_assert(at_upper(j));
             // here we have the expression  new_a*(xj - ub), so new_a*lb(j) is added to m_k
-            // a negative new_a creates a positive delta so it has to work against m_one_minus_f
-            // a positive new_a creates a negative delta so it has to work against m_f
             new_a = - (m_fj <= m_f ? m_fj / m_f  : ((1 - m_fj) / m_one_minus_f));
             lp_assert(new_a.is_neg());
             m_k.addmul(new_a, upper_bound(j).x);
