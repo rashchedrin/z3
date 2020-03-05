@@ -145,12 +145,13 @@ class create_cut {
             unsigned v = pol[0].second;
             lp_assert(is_int(v));
             const mpq& a = pol[0].first;
-            m_k /= a;
             if (a.is_pos()) { // we have av >= k
+                m_k /= a;
                 if (!m_k.is_int())
                     m_k = ceil(m_k);
                 m_t.add_monomial(mpq(1), v);
             } else {
+                m_k /= -a;
                 if (!m_k.is_int())
                     m_k = ceil(m_k);
                 m_t.add_monomial(-mpq(1), v);
