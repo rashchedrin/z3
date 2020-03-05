@@ -321,6 +321,11 @@ public:
 
              // use -p.coeff() to make the format compatible with the format used in: Integrating Simplex with DPLL(T)
             try {
+                if (lia.is_fixed(j)) {
+                    m_ex->push_justification(column_lower_bound_constraint(j));
+                    m_ex->push_justification(column_upper_bound_constraint(j));
+                    continue;
+                }
                 if (is_real(j)) {  
                     real_case_in_gomory_cut(- p.coeff(), j);
                 } 
