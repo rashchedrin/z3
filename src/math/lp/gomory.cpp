@@ -43,8 +43,9 @@ class create_cut {
     struct found_big {};
 
     const impq & get_value(unsigned j) const { return lia.get_value(j); }
-    bool is_real(unsigned j) const { return lia.is_real(j) && (! (lia.is_fixed(j) &&
-                                                                  lia.lra.column_lower_bound(j).is_int())); }
+    bool is_int(unsigned j) const { return lia.column_is_int(j) || (lia.is_fixed(j) &&
+                                                             lia.lra.column_lower_bound(j).is_int()); }
+    bool is_real(unsigned j) const { return !is_int(j); }
     bool at_lower(unsigned j) const { return lia.at_lower(j); }
     bool at_upper(unsigned j) const { return lia.at_upper(j); }
     const impq & lower_bound(unsigned j) const { return lia.lower_bound(j); }
@@ -53,10 +54,8 @@ class create_cut {
     constraint_index column_upper_bound_constraint(unsigned j) const { return lia.column_upper_bound_constraint(j); }
     bool column_is_fixed(unsigned j) const { return lia.lra.column_is_fixed(j); }
 
-   
-    
     void int_case_in_gomory_cut(unsigned j) {
-        lp_assert(lia.column_is_int(j) && m_fj.is_pos());
+        lp_assert(is_int(j) && m_fj.is_pos());
         TRACE("gomory_cut_detail", 
               tout << " k = " << m_k;
               tout << ", fj: " << m_fj << ", ";
@@ -64,13 +63,21 @@ class create_cut {
               );
         mpq new_a;
         if (at_lower(j)) {
-            new_a = m_fj <= m_one_minus_f ? m_fj / m_one_minus_f : ((m_fj - 1) / m_f);
+            // here we have the product of new_a*(xj - lb(j)), so new_a*lb(j) is added to m_k
+            // a positive new_a creates a positive delta so it has to work against m_one_minus_f
+            // a negative new_a creates a negative delta so it has to work against m_f
+            new_a = m_fj <= m_one_minus_f ? m_fj / m_one_minus_f : ((1 - m_fj) / m_f);
+            lp_assert(new_a.is_pos());
             m_k.addmul(new_a, lower_bound(j).x);
             m_ex->push_justification(column_lower_bound_constraint(j));            
         }
         else {
             lp_assert(at_upper(j));
-            new_a = - ( m_fj <=m_f ?  m_fj / m_f  : (m_fj - 1) / m_one_minus_f);
+            // here we have the expression  new_a*(xj - ub), so new_a*lb(j) is added to m_k
+            // a negative new_a creates a positive delta so it has to work against m_one_minus_f
+            // a positive new_a creates a negative delta so it has to work against m_f
+            new_a = - (m_fj <= m_f ? m_fj / m_f  : ((1 - m_fj) / m_one_minus_f));
+            lp_assert(new_a.is_neg());
             m_k.addmul(new_a, upper_bound(j).x);
             m_ex->push_justification(column_upper_bound_constraint(j));
         }
@@ -88,9 +95,11 @@ class create_cut {
         mpq new_a;
         if (at_lower(j)) {
             if (a.is_pos()) {
+                // the delta is a (x - f) is positive it has to grow and fight m_one_minus_f
                 new_a = a / m_one_minus_f;
             }
             else {
+                // the delta is negative and it works again m_f
                 new_a = - a / m_f;
             }
             m_k.addmul(new_a, lower_bound(j).x); // is it a faster operation than
@@ -100,9 +109,11 @@ class create_cut {
         else {
             lp_assert(at_upper(j));
             if (a.is_pos()) {
+                // the delta is works again m_f
                 new_a =  - a / m_f; 
             }
             else {
+                // the delta is positive works again m_one_minus_f
                 new_a =   a / m_one_minus_f; 
             }
             m_k.addmul(new_a, upper_bound(j).x); //  k += upper_bound(j).x * new_a; 
@@ -132,7 +143,7 @@ class create_cut {
         if (pol.size() == 1) {
             TRACE("gomory_cut_detail", tout << "pol.size() is 1" << std::endl;);
             unsigned v = pol[0].second;
-            lp_assert(lia.column_is_int(v));
+            lp_assert(is_int(v));
             const mpq& a = pol[0].first;
             m_k /= a;
             if (a.is_pos()) { // we have av >= k
@@ -152,7 +163,7 @@ class create_cut {
                 // normalize coefficients of integer parameters to be integers.
                 for (auto & pi: pol) {
                     pi.first *= m_lcm_den;
-                    SASSERT(!lia.column_is_int(pi.second) || pi.first.is_int());
+                    SASSERT(!is_int(pi.second) || pi.first.is_int());
                 }
                 m_k *= m_lcm_den;
             }
@@ -204,7 +215,7 @@ class create_cut {
     }
 
     void dump_declaration(std::ostream& out, unsigned v) const {
-        out << "(declare-const " << var_name(v) << (lia.column_is_int(v) ? " Int" : " Real") << ")\n";
+        out << "(declare-const " << var_name(v) << (is_int(v) ? " Int" : " Real") << ")\n";
     }
     
     void dump_declarations(std::ostream& out) const {
