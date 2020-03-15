@@ -246,7 +246,15 @@ namespace opt {
         if (!val.is_finite()) {
             // skip model updates
         }
-        else {
+        else if (m_context.get_context().update_model(has_shared)) {
+            if (has_shared && val != current_objective_value(i)) {
+                decrement_value(i, val);
+            }
+            else {
+                set_model(i);
+            }
+        }
+         else {
             decrement_value(i, val);
         }
         m_objective_values[i] = val;
