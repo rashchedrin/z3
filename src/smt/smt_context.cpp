@@ -515,6 +515,7 @@ namespace smt {
             TRACE("add_eq", tout << "assigning: #" << n1->get_owner_id() << " = #" << n2->get_owner_id() << "\n";);
             TRACE("add_eq_detail", tout << "assigning\n" << enode_pp(n1, *this) << "\n" << enode_pp(n2, *this) << "\n";
                   tout << "kind: " << js.get_kind() << "\n";);
+            SASSERT(m.get_sort(n1->get_owner()) == m.get_sort(n2->get_owner()));
 
             m_stats.m_num_add_eq++;
             enode * r1 = n1->get_root();
@@ -4460,12 +4461,11 @@ namespace smt {
         if (refinalize) {
             fcs = final_check();
         }
-        TRACE("opt", tout << (refinalize?"refinalize":"no-op") << " " << fcs << "\n";);
+        TRACE("opt", display(tout << (refinalize?"refinalize":"no-op") << " " << fcs << "\n"););
         if (fcs == FC_DONE) {
             reset_model();
         }
-
-        return fcs == FC_DONE;
+        return false;
     }
 
     void context::mk_proto_model() {
