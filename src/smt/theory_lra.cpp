@@ -2268,6 +2268,7 @@ public:
         local_bound_propagator bp(*this);
 
         lp().propagate_bounds_for_touched_rows(bp);
+
         if (m.canceled()) {
             return;
         }
