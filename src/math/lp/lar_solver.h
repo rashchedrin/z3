@@ -59,7 +59,7 @@ class lar_solver : public column_namer {
             size_t seed = 0;
             int i = 0;
             for (const auto p : t) {
-                hash_combine(seed, p.var());
+                hash_combine(seed, p.tv().index());
                 hash_combine(seed, p.coeff());
                 if (i++ > 10)
                     break;
@@ -263,7 +263,7 @@ public:
     
     void calculate_implied_bounds_for_row(unsigned i, lp_bound_propagator & bp);
 
-    unsigned adjust_column_index_to_term_index(unsigned j) const;
+    unsigned adjust_column_index_to_term_index(tv j) const;
 
     unsigned map_term_index_to_column_index(unsigned j) const;
     
@@ -477,9 +477,9 @@ public:
     
     void get_model_do_not_care_about_diff_vars(std::unordered_map<var_index, mpq> & variable_values) const;
 
-    std::string get_variable_name(var_index vi) const;
+    std::string get_variable_name(unsigned vi) const;
 
-    void set_variable_name(var_index vi, std::string);
+    void set_variable_name(tv vi, std::string);
 
     // ********** print region start
 
@@ -576,11 +576,11 @@ public:
     }
 
     void subs_term_columns(lar_term& t) {
-        vector<std::pair<unsigned,unsigned>> columns_to_subs;
+        vector<std::pair<tv, tv>> columns_to_subs;
         for (const auto & m : t) {
-            unsigned tj = adjust_column_index_to_term_index(m.var());
-            if (tj == m.var()) continue;
-            columns_to_subs.push_back(std::make_pair(m.var(), tj));
+            unsigned tj = adjust_column_index_to_term_index(m.tv());
+            if (tv::raw(tj) == m.tv()) continue;
+            columns_to_subs.push_back(std::make_pair(m.tv(), tv::raw(tj)));
         }
         for (const auto & p : columns_to_subs) {
             t.subst_index(p.first, p.second);            

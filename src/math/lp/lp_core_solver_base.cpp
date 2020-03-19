@@ -101,11 +101,11 @@ template lp::lp_core_solver_base<lp::mpq, lp::mpq>::lp_core_solver_base(
                                                                               const vector<lp::mpq>&,
                                                                               const vector<lp::mpq>&);
 template bool lp::lp_core_solver_base<lp::mpq, lp::numeric_pair<lp::mpq> >::print_statistics_with_iterations_and_check_that_the_time_is_over(std::ostream &);
-template std::string lp::lp_core_solver_base<double, double>::column_name(unsigned int) const;
+template std::string lp::lp_core_solver_base<double, double>::column_name(tv) const;
 template void lp::lp_core_solver_base<double, double>::pretty_print(std::ostream & out);
 template void lp::lp_core_solver_base<double, double>::restore_state(double*, double*);
 template void lp::lp_core_solver_base<double, double>::save_state(double*, double*);
-template std::string lp::lp_core_solver_base<lp::mpq, lp::mpq>::column_name(unsigned int) const;
+template std::string lp::lp_core_solver_base<lp::mpq, lp::mpq>::column_name(tv) const;
 template void lp::lp_core_solver_base<lp::mpq, lp::mpq>::pretty_print(std::ostream & out);
 template void lp::lp_core_solver_base<lp::mpq, lp::mpq>::restore_state(lp::mpq*, lp::mpq*);
 template void lp::lp_core_solver_base<lp::mpq, lp::mpq>::save_state(lp::mpq*, lp::mpq*);

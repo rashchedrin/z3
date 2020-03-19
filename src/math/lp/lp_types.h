@@ -18,6 +18,8 @@ Revision History:
 
 --*/
 #pragma once
+#include <climits>
+#include "util/debug.h"
 namespace lp {
 typedef unsigned var_index;
 typedef unsigned constraint_index;
@@ -31,6 +33,7 @@ class tv {
     static const unsigned EF = UINT_MAX >> 1;
     tv(unsigned i): m_index(i) {}
 public:
+    tv() {}
     static tv term(unsigned i) { SASSERT(0 == (i & left_most_bit)); return tv(mask_term(i)); }
     static tv var(unsigned i) { SASSERT(0 == (i & left_most_bit)); return tv(i); }
     static tv raw(unsigned i) { return tv(i); }
@@ -51,6 +54,27 @@ public:
 
     // used by var_register. could we encapsulate even this?
     static const unsigned left_most_bit  = ~EF;
+};
 
+std::ostream& operator<<(std::ostream& out, tv t) {
+    if (t.is_term()) {
+        out << "t" << t.id();
+    } else {
+        out << "v" << t.index();
+    }
+    return out;
+}
+
+bool operator==(tv a, tv b) { return a.index() == b.index(); }
+
+struct tv_hash {
+    unsigned operator()(tv v) const {
+        return v.index();
+    }
+};
+struct tv_equal {
+    unsigned operator()(const tv& a, const tv & b) const {
+        return a == b;
+    }
 };
 }

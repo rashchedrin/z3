@@ -35,7 +35,7 @@ public:
     }
     
     template <typename T>
-    void print_linear_combination_of_column_indices(const vector<std::pair<T, unsigned>> & coeffs, std::ostream & out) const {
+    void print_linear_combination_of_column_indices(const vector<std::pair<T, tv>> & coeffs, std::ostream & out) const {
         bool first = true;
         for (const auto & it : coeffs) {
             auto val = it.first;

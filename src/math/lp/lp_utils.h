@@ -19,6 +19,7 @@ Revision History:
 --*/
 #pragma once
 #include <string>
+#include "math/lp/lp_types.h"
 #include "math/lp/numeric_pair.h"
 #include "util/debug.h"
 #include <unordered_map>
@@ -84,7 +85,7 @@ bool is_non_decreasing(const K& v) {
 }
 
 template <typename T>
-std::ostream& print_linear_combination_customized(const vector<std::pair<T, unsigned>> & coeffs, std::function<std::string (unsigned)> var_str, std::ostream & out) {
+std::ostream& print_linear_combination_customized(const vector<std::pair<T, tv>> & coeffs, std::function<std::string (tv)> var_str, std::ostream & out) {
     bool first = true;
     for (const auto & it : coeffs) {
         T val = it.first;
@@ -112,10 +113,10 @@ std::ostream& print_linear_combination_customized(const vector<std::pair<T, unsi
 
 
 template <typename T>
-std::ostream& print_linear_combination_of_column_indices_only(const vector<std::pair<T, unsigned>> & coeffs, std::ostream & out) {
+std::ostream& print_linear_combination_of_column_indices_only(const vector<std::pair<T, tv>> & coeffs, std::ostream & out) {
     return print_linear_combination_customized(
         coeffs,
-        [](unsigned j) {std::stringstream ss; ss << "v" << j; return ss.str();},
+        [](tv j) {std::stringstream ss; ss << "v" << j; return ss.str();},
         out); 
 }
 template <typename T, typename K>

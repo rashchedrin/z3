@@ -26,10 +26,10 @@ namespace lp {
 class lar_term {
     // the term evaluates to sum of m_coeffs 
     typedef unsigned lpvar;
-    u_map<mpq> m_coeffs;
+    map<tv, mpq, tv_hash, tv_equal > m_coeffs;
 public:
     lar_term() {}
-    void add_monomial(const mpq& c, unsigned j) {
+    void add_monomial(const mpq& c, tv j) {
         if (c.is_zero())
             return;
         auto *e = m_coeffs.find_core(j);        
@@ -42,7 +42,7 @@ public:
         }
     }
     
-    void add_var(lpvar j) {
+    void add_var(tv j) {
         rational c(1);
         add_monomial(c, j);
     }
@@ -58,7 +58,7 @@ public:
         return m_coeffs;
     }
     
-    lar_term(const vector<std::pair<mpq, unsigned>>& coeffs) {
+    lar_term(const vector<std::pair<mpq, tv>>& coeffs) {
         for (const auto & p : coeffs) {
             add_monomial(p.first, p.second);
         }
@@ -68,8 +68,8 @@ public:
     // some terms get used in add constraint
     // it is the same as the offset in the m_constraints
 
-    vector<std::pair<mpq, lpvar>> coeffs_as_vector() const {
-        vector<std::pair<mpq, lpvar>> ret;
+    vector<std::pair<mpq, tv>> coeffs_as_vector() const {
+        vector<std::pair<mpq, tv>> ret;
         for (const auto & p :  m_coeffs) {
             ret.push_back(std::make_pair(p.m_value, p.m_key));
         }
@@ -77,18 +77,18 @@ public:
     }
 
     // j is the basic variable to substitute
-    void subst(unsigned j, indexed_vector<mpq> & li) {
+    void subst(tv j, indexed_vector<mpq> & li) {
         auto* it = m_coeffs.find_core(j);
         if (it == nullptr) return;
         const mpq & b = it->get_data().m_value;
         for (unsigned it_j :li.m_index) {
-            add_monomial(- b * li.m_data[it_j], it_j);
+            add_monomial(- b * li.m_data[it_j], tv::var(it_j));
         }
         m_coeffs.erase(j);
     }
 
     // the monomial ax[j] is substituted by ax[k]
-    void subst_index(unsigned j, unsigned k) {
+    void subst_index(tv j, tv k) {
         auto* it = m_coeffs.find_core(j);
         if (it == nullptr) return;
         mpq b = it->get_data().m_value;
@@ -96,7 +96,7 @@ public:
         m_coeffs.insert(k, b);
     }
     
-    bool contains(unsigned j) const {
+    bool contains(tv j) const {
         return m_coeffs.contains(j);
     }
 
@@ -119,36 +119,37 @@ public:
     }
 
     class ival {
-        unsigned m_var;
+        tv m_tv;
         const mpq & m_coeff;
     public:
-        ival(unsigned var, const mpq & val) : m_var(var), m_coeff(val) { }
-        unsigned var() const { return m_var; }
+        ival(tv p, const mpq & val) : m_tv(p), m_coeff(val) { }
+        tv tv() const { return m_tv; }
         const mpq & coeff() const { return m_coeff; }
     };
     
     class const_iterator {
-        u_map< mpq>::iterator m_it;
+        map<tv, mpq, tv_hash, tv_equal>::iterator m_it;
     public:
         ival operator*() const { return ival(m_it->m_key, m_it->m_value); }        
         const_iterator operator++() { const_iterator i = *this; m_it++; return i;  }
         const_iterator operator++(int) { m_it++; return *this; }
-        const_iterator(u_map<mpq>::iterator it) : m_it(it) {}
+        const_iterator(map<tv, mpq, tv_hash, tv_equal>::iterator it) : m_it(it) {}
         bool operator==(const const_iterator &other) const { return m_it == other.m_it; }
         bool operator!=(const const_iterator &other) const { return !(*this == other); }
     };
    
     bool is_normalized() const {
-        lpvar min_var = -1;
+        lpvar min_var = UINT_MAX;
         mpq c;
         for (const auto & p : *this) {
-            if (p.var() < min_var) {
-                min_var = p.var();
+            SASSERT((p.tv().is_var()));
+            if (p.tv().index() < min_var) {
+                min_var = p.tv().index();
             }
         }
         lar_term r;
         for (const auto & p : *this) {
-            if (p.var() == min_var) {
+            if (p.tv().index() == min_var) {
                 return p.coeff().is_one();
             }
         }

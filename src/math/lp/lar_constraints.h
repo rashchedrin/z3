@@ -55,7 +55,7 @@ class lar_base_constraint {
     unsigned         m_j;
 public:
 
-    virtual vector<std::pair<mpq, var_index>> coeffs() const = 0;
+    virtual vector<std::pair<mpq, tv>> coeffs() const = 0;
     lar_base_constraint(unsigned j, lconstraint_kind kind, const mpq& right_side) :m_kind(kind), m_right_side(right_side), m_active(false), m_j(j) {}
     virtual ~lar_base_constraint() {}
 
@@ -76,9 +76,9 @@ public:
     lar_var_constraint(unsigned j, lconstraint_kind kind, const mpq& right_side) : 
         lar_base_constraint(j, kind, right_side) {}
 
-    vector<std::pair<mpq, var_index>> coeffs() const override {
-        vector<std::pair<mpq, var_index>> ret;
-        ret.push_back(std::make_pair(one_of_type<mpq>(), column()));
+    vector<std::pair<mpq, tv>> coeffs() const override {
+        vector<std::pair<mpq, tv>> ret;
+        ret.push_back(std::make_pair(one_of_type<mpq>(), tv::raw(column())));
         return ret;
     }
     unsigned size() const override { return 1;}
@@ -91,7 +91,7 @@ public:
     lar_term_constraint(unsigned j, const lar_term *t, lconstraint_kind kind, const mpq& right_side) : 
         lar_base_constraint(j, kind, right_side), m_term(t) {}
 
-    vector<std::pair<mpq, var_index>> coeffs() const override { return m_term->coeffs_as_vector(); }
+    vector<std::pair<mpq, tv>> coeffs() const override { return m_term->coeffs_as_vector(); }
     unsigned size() const override { return m_term->size();}
 };
 
@@ -126,7 +126,7 @@ class constraint_set {
         return out;
     }
 
-    std::ostream& print_left_side_of_constraint(const lar_base_constraint & c, std::function<std::string (unsigned)>& var_str, std::ostream & out) const {
+    std::ostream& print_left_side_of_constraint(const lar_base_constraint & c, std::function<std::string (tv)>& var_str, std::ostream & out) const {
         print_linear_combination_customized(c.coeffs(), var_str, out);
         mpq free_coeff = c.get_free_coeff_of_left_side();
         if (!is_zero(free_coeff))
@@ -275,11 +275,11 @@ public:
         return out << " " << lconstraint_kind_string(c.kind()) << " " << c.rhs() << std::endl;
     }
 
-    std::ostream& display(std::ostream& out, std::function<std::string (unsigned)> var_str, constraint_index ci) const {
+    std::ostream& display(std::ostream& out, std::function<std::string (tv)> var_str, constraint_index ci) const {
         return (ci >= m_constraints.size()) ? out_of_bounds(out, ci) : display(out, var_str, (*this)[ci]);
     }
 
-    std::ostream& display(std::ostream& out, std::function<std::string (unsigned)>& var_str, lar_base_constraint const& c) const {
+    std::ostream& display(std::ostream& out, std::function<std::string (tv)>& var_str, lar_base_constraint const& c) const {
         print_left_side_of_constraint(c, var_str, out); 
         return out << " " << lconstraint_kind_string(c.kind()) << " " << c.rhs() << std::endl;
     }

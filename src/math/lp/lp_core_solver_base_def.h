@@ -783,7 +783,7 @@ copy_rs_to_xB(vector<X> & rs) {
 }
 
 template <typename T, typename X> std::string lp_core_solver_base<T, X>::
-column_name(unsigned column) const {
+column_name(lpvar column) const {
     return m_column_names.get_variable_name(column);
 }
 

@@ -198,7 +198,7 @@ public:
     std::ostream& print_product(const T & m, std::ostream& out) const;    
     template <typename T>
     std::string product_indices_str(const T & m) const;
-    std::string var_str(lpvar) const;
+    std::string var_str(tv) const;
     
     std::ostream & print_factor(const factor& f, std::ostream& out) const;
     std::ostream & print_factor_with_vars(const factor& f, std::ostream& out) const;

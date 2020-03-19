@@ -23,7 +23,7 @@ Revision History:
 namespace lp {
 struct implied_bound {
     mpq m_bound;
-    unsigned m_j; // the column for which the bound has been found
+    tv m_j; // the column for which the bound has been found
     bool m_is_lower_bound;
     bool m_coeff_before_j_is_pos;
     unsigned m_row_or_term_index;
@@ -41,7 +41,7 @@ struct implied_bound {
     }
     implied_bound(){}
     implied_bound(const mpq & a,
-                  unsigned j,
+                  tv j,
                   bool lower_bound,
                   bool coeff_before_j_is_pos,
                   unsigned row_or_term_index,
